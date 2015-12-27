@@ -10,7 +10,7 @@ class EventReporterTest < Minitest::Test
 
   def test_loads_a_file
     e = EventReporter.new
-    e.load('test/fixtures/event_attendees_sample.csv')
+    e.load(['test/fixtures/event_attendees_sample.csv'])
 
     expected = {:id=>"1",
                 :regdate=>"11/12/08 10:47",
@@ -62,7 +62,7 @@ class EventReporterTest < Minitest::Test
 
   def test_finds_by_column_value
     e = EventReporter.new
-    e.load('test/fixtures/event_attendees_sample.csv')
+    e.load(['test/fixtures/event_attendees_sample.csv'])
     expected = [{:id=>"1", :regdate=>"11/12/08 10:47", :first_name=>"Allison",
                 :last_name=>"Nguyen", :email_address=>"arannon@jumpstartlab.com",
                 :homephone=>"6154385000", :street=>"3155 19th St NW",
@@ -71,12 +71,12 @@ class EventReporterTest < Minitest::Test
                 :last_name=>"Hankins", :email_address=>"pinalevitsky@jumpstartlab.com",
                 :homephone=>"414-520-5000", :street=>"2022 15th Street NW",
                 :city=>"Washington", :state=>"DC", :zipcode=>"20009"}]
-    assert_equal expected, e.find("city"," washingTon ")
+    assert_equal expected, e.find(["city"," washingTon "])
   end
 
   def test_finds_by_column_value_through_ultimate
     e = EventReporter.new
-    e.load('test/fixtures/event_attendees_sample.csv')
+    e.load(['test/fixtures/event_attendees_sample.csv'])
     expected = [{:id=>"1", :regdate=>"11/12/08 10:47", :first_name=>"Allison",
                 :last_name=>"Nguyen", :email_address=>"arannon@jumpstartlab.com",
                 :homephone=>"6154385000", :street=>"3155 19th St NW",
@@ -88,4 +88,31 @@ class EventReporterTest < Minitest::Test
     assert_equal expected, e.ultimate_method("find city washingTon ")
   end
 
+  def test_counts_records_in_the_queue
+    e = EventReporter.new
+    e.load(['test/fixtures/event_attendees_sample.csv'])
+    queue = e.find(["city"," washingTon "])
+
+    assert_equal 2, e.ultimate_method("queue count")
+  end
+
+  def test_empties_records_in_the_queue
+    e = EventReporter.new
+    e.load(['test/fixtures/event_attendees_sample.csv'])
+    queue = e.find(["city"," washingTon "])
+
+    assert_equal 2, e.ultimate_method("queue count")
+
+    e.ultimate_method("queue clear")
+
+    assert_equal 0, e.ultimate_method("queue count")
+  end
+
+  def test_empties_records_in_the_queue
+    e = EventReporter.new
+    e.load(['test/fixtures/event_attendees_sample.csv'])
+    queue = e.find(["city"," washingTon "])
+
+    refute e.print_table
+  end
 end

@@ -1,13 +1,38 @@
 require 'csv'
+require 'terminal-table'
 
 class EventReporter
 
-  attr_reader :opened_file, :queue
+  attr_reader :opened_file, :current_queue
 
-  def find(column_name, row_value)
-    @queue = opened_file.select do |row|
+  def find(column_name_and_row_value)
+    column_name, row_value = column_name_and_row_value
+    @current_queue = opened_file.select do |row|
       cleanse(row[column_name.to_sym]) == cleanse(row_value)
     end
+  end
+
+  def queue(secondary_commands)
+    second_command = secondary_commands[0]
+    case second_command
+    when "count"
+      current_queue.count
+    when "clear"
+      @current_queue = []
+    when "print"
+      print_table
+    end
+  end
+
+  def print_table
+    rows = @current_queue.map do |row|
+      row.values[2..-1]
+    end
+    rows.unshift(:separator)
+    headers = ["FIRST NAME","LAST NAME","EMAIL","PHONE","CITY","STATE","ADDRESS","ZIPCODE"]
+    rows.unshift(headers)
+
+    puts Terminal::Table.new :rows => rows
   end
 
   def cleanse(string)
@@ -15,16 +40,18 @@ class EventReporter
   end
 
   def load(file = nil)
-    file = "lib/event_attendees.csv" if file == ""
+    file = file[0]
+    file = "lib/event_attendees.csv" if file.nil?
     csv_file = CSV.open(file, headers: true, header_converters: :symbol)
     @opened_file = csv_file.to_a.map(&:to_h)
   end
 
-  def help(second_command)
-    if second_command == ""
+  def help(secondary_commands)
+    help_query = secondary_commands.join(" ")
+    if help_query == ""
       available_methods.join("\n")
     else
-      help_commands[second_command]
+      help_commands[help_query]
     end
   end
 
@@ -56,9 +83,9 @@ class EventReporter
     commands = cli_input.split
 
     initial_command = commands.first
-    second_command = commands[1..-1].join(" ")
+    secondary_commands = commands[1..-1]
 
-    send(initial_command, second_command)
+    send(initial_command, secondary_commands)
   end
 end
 
