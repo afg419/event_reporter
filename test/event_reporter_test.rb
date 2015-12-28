@@ -108,11 +108,38 @@ class EventReporterTest < Minitest::Test
     assert_equal 0, e.ultimate_method("queue count")
   end
 
-  def test_empties_records_in_the_queue
+  def test_prints_table_records_from_the_queue
     e = EventReporter.new
     e.load(['test/fixtures/event_attendees_sample.csv'])
     queue = e.find(["city"," washingTon "])
 
-    refute e.print_table
+    assert_equal 3, e.print_table(["print"]).rows.count
+    assert_equal 8, e.print_table(["print"]).number_of_columns
+    puts e.print_table(["print"])
   end
+
+  def test_prints_table_records_after_sorting_by_attribute
+    e = EventReporter.new
+    e.load(['test/fixtures/event_attendees_sample.csv'])
+    queue = e.find(["city"," washingTon "])
+
+    table = e.print_table(["print"])
+    assert_equal "Nguyen", table.rows[1].cells[1].value
+    assert_equal "Hankins", table.rows[2].cells[1].value
+    puts table
+
+    table = e.print_table(["print", "by", "last_name"])
+    puts table
+    assert_equal "Hankins", table.rows[1].cells[1].value
+    assert_equal "Nguyen", table.rows[2].cells[1].value
+  end
+
+  def test_saves_table_to_new_file
+    e = EventReporter.new
+    e.load(['test/fixtures/event_attendees_sample.csv'])
+    queue = e.find(["city"," washingTon "])
+
+    e.save_file(["save","to","does_it_work.csv"])
+  end
+
 end
